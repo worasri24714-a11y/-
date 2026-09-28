@@ -168,7 +168,7 @@ fun CopyScreen(
                             Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.action_edit_text))
                         }
                     }
-                    if (state is CopyUiState.Image) {
+                    if (state is CopyUiState.Image && viewModel.ocrAvailable) {
                         IconButton(onClick = viewModel::recognizeText) {
                             Icon(Icons.Outlined.DocumentScanner, contentDescription = stringResource(R.string.action_ocr))
                         }

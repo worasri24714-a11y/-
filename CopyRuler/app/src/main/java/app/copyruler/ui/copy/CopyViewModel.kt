@@ -105,6 +105,9 @@ class CopyViewModel(
     private var cachedKey: Pair<String, SegmentUnit>? = null
     private var cachedSegments: List<Segment> = emptyList()
 
+    /** False in builds that ship without the ML Kit model. */
+    val ocrAvailable: Boolean = textRecognizer.isAvailable
+
     private val _ocrState = MutableStateFlow<OcrState>(OcrState.Idle)
     val ocrState: StateFlow<OcrState> = _ocrState.asStateFlow()
     private var ocrJob: Job? = null

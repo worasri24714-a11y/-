@@ -20,6 +20,9 @@ import kotlin.coroutines.resumeWithException
  */
 class TextRecognizerService(private val context: Context) {
 
+    /** Whether on-device recognition is part of this build; the copy screen hides the action otherwise. */
+    val isAvailable: Boolean get() = true
+
     suspend fun recognize(imageFile: File): String {
         val image = withContext(Dispatchers.IO) {
             InputImage.fromFilePath(context, Uri.fromFile(imageFile))

@@ -13,3 +13,6 @@
 *.aab
 *.jks
 *.keystore
+
+# Prebuilt APK shipped in the repo
+!/release/*.apk
