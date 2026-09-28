@@ -74,6 +74,10 @@
     <string name="font_size_value">%1$d sp</string>
     <string name="band_height_label">ความสูงแถบ</string>
     <string name="band_height_value">%1$s%% ของความสูงรูป</string>
+    <string name="snap_lines_label">จับบรรทัดอัตโนมัติ</string>
+    <string name="snap_lines_found">พบ %1$d บรรทัดในรูป แถบจะกระโดดไปครอบบรรทัดถัดไปพอดี</string>
+    <string name="snap_lines_none">หาบรรทัดในรูปไม่พบ ใช้ความสูงแถบด้านล่างแทน</string>
+    <string name="snap_lines_off">ปิดอยู่ แถบเลื่อนลงทีละความสูงแถบ</string>
     <string name="band_hint">แตะที่รูปเพื่อย้ายแถบ ลากแถบได้โดยตรง และถ่างสองนิ้วเพื่อซูม</string>
     <string name="copy_end_text">ลอกครบทุกท่อนแล้ว 🎉</string>
     <string name="copy_start_text">อยู่ท่อนแรกแล้ว</string>

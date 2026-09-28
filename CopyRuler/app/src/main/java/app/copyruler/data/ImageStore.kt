@@ -3,16 +3,22 @@ package app.copyruler.data
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Matrix
+import android.graphics.Paint
 import android.media.ExifInterface
 import android.net.Uri
 import androidx.core.content.FileProvider
+import app.copyruler.ruler.LineDetector
+import app.copyruler.ruler.LineSpan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.UUID
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -38,7 +44,7 @@ class ImageStore(private val context: Context) {
      * size the screen can draw. Returns the stored path relative to the files directory.
      */
     suspend fun import(source: Uri): String = withContext(Dispatchers.IO) {
-        val bitmap = decodeUpright(source) ?: throw IOException("Cannot decode $source")
+        val bitmap = straighten(decodeUpright(source) ?: throw IOException("Cannot decode $source"))
         val relativePath = "$IMAGES_DIR/${UUID.randomUUID()}.jpg"
         val target = file(relativePath)
         target.parentFile?.mkdirs()
@@ -62,6 +68,46 @@ class ImageStore(private val context: Context) {
             // Mipmaps keep small print sharp when a large photo is drawn at screen width.
             setHasMipMap(true)
             prepareToDraw()
+        }
+    }
+
+    /** Text lines in [bitmap] as fractions of its height; empty when none are found. */
+    suspend fun findLines(bitmap: Bitmap): List<LineSpan> = withContext(Dispatchers.Default) {
+        val small = Luminance.of(bitmap, ANALYSIS_WIDTH)
+        LineDetector.detect(small.values, small.width, small.height)
+    }
+
+    /** Rotates a slightly tilted page photo so its text lines are level. */
+    private fun straighten(bitmap: Bitmap): Bitmap {
+        val small = Luminance.of(bitmap, ANALYSIS_WIDTH)
+        val ink = LineDetector.inkMap(small.values, small.width, small.height)
+        val angle = LineDetector.skewDegrees(ink, small.width, small.height)
+        if (abs(angle) < MIN_SKEW_DEGREES) return bitmap
+        val level = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        Canvas(level).apply {
+            drawColor(Color.WHITE)
+            rotate(-angle, bitmap.width / 2f, bitmap.height / 2f)
+            drawBitmap(bitmap, 0f, 0f, Paint(Paint.FILTER_BITMAP_FLAG))
+        }
+        bitmap.recycle()
+        return level
+    }
+
+    private class Luminance(val values: IntArray, val width: Int, val height: Int) {
+        companion object {
+            fun of(bitmap: Bitmap, targetWidth: Int): Luminance {
+                val width = min(targetWidth, bitmap.width)
+                val height = (bitmap.height.toLong() * width / bitmap.width).toInt().coerceAtLeast(1)
+                val small = Bitmap.createScaledBitmap(bitmap, width, height, true)
+                val pixels = IntArray(width * height)
+                small.getPixels(pixels, 0, width, 0, 0, width, height)
+                if (small !== bitmap) small.recycle()
+                for (i in pixels.indices) {
+                    val c = pixels[i]
+                    pixels[i] = (Color.red(c) * 299 + Color.green(c) * 587 + Color.blue(c) * 114) / 1000
+                }
+                return Luminance(pixels, width, height)
+            }
         }
     }
 
@@ -135,6 +181,12 @@ class ImageStore(private val context: Context) {
         const val IMAGES_DIR = "images"
         const val CAMERA_DIR = "camera"
         const val JPEG_QUALITY = 90
+
+        /** Width of the grayscale copy used to find lines; enough to separate lines of small print. */
+        const val ANALYSIS_WIDTH = 480
+
+        /** Tilts smaller than this are left alone. */
+        const val MIN_SKEW_DEGREES = 0.3f
 
         /** Longest side we keep; larger bitmaps fail to draw on some GPUs. */
         const val MAX_SIDE = 4096

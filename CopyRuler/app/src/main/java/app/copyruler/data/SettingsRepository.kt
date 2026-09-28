@@ -24,6 +24,8 @@ data class AppSettings(
     val haptics: Boolean = true,
     val fontSizeSp: Int = DEFAULT_FONT_SIZE,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    /** In photo mode, move the band from one detected text line to the next. */
+    val snapToLines: Boolean = true,
 ) {
     companion object {
         const val MIN_FONT_SIZE = 16
@@ -45,6 +47,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 themeMode = prefs[THEME]
                     ?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }
                     ?: ThemeMode.SYSTEM,
+                snapToLines = prefs[SNAP_TO_LINES] ?: true,
             )
         }
 
@@ -62,6 +65,10 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    suspend fun setSnapToLines(enabled: Boolean) {
+        dataStore.edit { it[SNAP_TO_LINES] = enabled }
+    }
+
     suspend fun setThemeMode(mode: ThemeMode) {
         dataStore.edit { it[THEME] = mode.name }
     }
@@ -71,5 +78,6 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val HAPTICS = booleanPreferencesKey("haptics")
         val FONT_SIZE = intPreferencesKey("font_size_sp")
         val THEME = stringPreferencesKey("theme_mode")
+        val SNAP_TO_LINES = booleanPreferencesKey("snap_to_lines")
     }
 }

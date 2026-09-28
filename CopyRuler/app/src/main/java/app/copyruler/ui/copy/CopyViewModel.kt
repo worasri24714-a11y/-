@@ -11,6 +11,8 @@ import app.copyruler.data.ImageStore
 import app.copyruler.data.SettingsRepository
 import app.copyruler.ocr.TextRecognizerService
 import app.copyruler.ruler.ImageBand
+import app.copyruler.ruler.LineDetector
+import app.copyruler.ruler.LineSpan
 import app.copyruler.ruler.Segment
 import app.copyruler.ruler.SegmentUnit
 import app.copyruler.ruler.Segmenter
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -47,8 +50,16 @@ sealed interface CopyUiState {
         val loadFailed: Boolean,
         val bandTop: Float,
         val bandHeight: Float,
+        /** Whether "snap to detected lines" is switched on. */
+        val snapToLines: Boolean,
+        /** Lines found in the photo (0 while loading or when none were found). */
+        val lineCount: Int,
+        /** Index of the line under the band, or -1 when not snapping. */
+        val lineIndex: Int,
     ) : CopyUiState {
-        val progress: Float get() = ImageBand.progress(bandTop, bandHeight)
+        val snapping: Boolean get() = snapToLines && lineCount >= MIN_LINES
+        val progress: Float
+            get() = if (snapping) (lineIndex + 1f) / lineCount else ImageBand.progress(bandTop, bandHeight)
     }
 }
 
@@ -91,7 +102,7 @@ class CopyViewModel(
 
     private sealed interface ImageLoad {
         data object Loading : ImageLoad
-        data class Ready(val bitmap: ImageBitmap) : ImageLoad
+        data class Ready(val bitmap: ImageBitmap, val lines: List<LineSpan>) : ImageLoad
         data object Failed : ImageLoad
     }
 
@@ -112,6 +123,10 @@ class CopyViewModel(
     val ocrState: StateFlow<OcrState> = _ocrState.asStateFlow()
     private var ocrJob: Job? = null
 
+    private val snapToLines: StateFlow<Boolean> = settingsRepository.settings
+        .map { it.snapToLines }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     private val _events = Channel<CopyEvent>(Channel.BUFFERED)
     val events: Flow<CopyEvent> = _events.receiveAsFlow()
 
@@ -120,7 +135,8 @@ class CopyViewModel(
         cursor,
         band,
         image,
-    ) { doc, cursor, band, image ->
+        snapToLines,
+    ) { doc, cursor, band, image, snap ->
         when {
             // Room answers null only when the row does not exist (e.g. it was deleted).
             doc == null -> CopyUiState.Missing
@@ -128,13 +144,19 @@ class CopyViewModel(
                 val segments = segmentsFor(doc.text, cursor.unit)
                 CopyUiState.Text(doc.title, cursor.unit, segments, clampIndex(cursor.index, segments.size))
             }
-            doc.kind == DocumentKind.IMAGE && band != null -> CopyUiState.Image(
-                title = doc.title,
-                bitmap = (image as? ImageLoad.Ready)?.bitmap,
-                loadFailed = image is ImageLoad.Failed,
-                bandTop = band.top,
-                bandHeight = band.height,
-            )
+            doc.kind == DocumentKind.IMAGE && band != null -> {
+                val lines = (image as? ImageLoad.Ready)?.lines.orEmpty()
+                CopyUiState.Image(
+                    title = doc.title,
+                    bitmap = (image as? ImageLoad.Ready)?.bitmap,
+                    loadFailed = image is ImageLoad.Failed,
+                    bandTop = band.top,
+                    bandHeight = band.height,
+                    snapToLines = snap,
+                    lineCount = lines.size,
+                    lineIndex = if (snap) LineDetector.nearest(lines, band.top + band.height / 2f) else -1,
+                )
+            }
             else -> CopyUiState.Loading
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, CopyUiState.Loading)
@@ -183,11 +205,34 @@ class CopyViewModel(
         band.value = current.copy(top = ImageBand.clampTop(top, current.height))
     }
 
-    /** Centres the band on a tapped spot, given as a fraction of the image height. */
+    /** Puts the band on a tapped spot (fraction of image height): the line there, or centred on it. */
     fun placeBandAt(fraction: Float) {
         val current = band.value ?: return
-        band.value = current.copy(top = ImageBand.centeredAt(fraction, current.height))
+        val lines = activeLines()
+        if (lines.isNotEmpty()) {
+            snapTo(lines[LineDetector.nearest(lines, fraction)])
+        } else {
+            band.value = current.copy(top = ImageBand.centeredAt(fraction, current.height))
+        }
         commitBand()
+    }
+
+    /** Called when the finger lifts after dragging the band; settles it on the nearest line. */
+    fun finishDrag() {
+        val current = band.value ?: return
+        val lines = activeLines()
+        if (lines.isNotEmpty()) snapTo(lines[LineDetector.nearest(lines, current.top + current.height / 2f)])
+        commitBand()
+    }
+
+    fun setSnapToLines(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setSnapToLines(enabled) }
+        val current = band.value ?: return
+        val lines = if (enabled) readyLines().takeIf { it.size >= MIN_LINES }.orEmpty() else emptyList()
+        if (lines.isNotEmpty()) {
+            snapTo(lines[LineDetector.nearest(lines, current.top + current.height / 2f)])
+            commitBand()
+        }
     }
 
     /** Resizes the band while the slider moves; saved by [commitBand] when it is released. */
@@ -254,6 +299,8 @@ class CopyViewModel(
             }
             DocumentKind.IMAGE -> {
                 val current = band.value ?: return MoveResult.Ignored
+                val lines = activeLines()
+                if (lines.isNotEmpty()) return moveByLine(current, lines, forward)
                 val top = if (forward) {
                     ImageBand.next(current.top, current.height)
                 } else {
@@ -270,20 +317,58 @@ class CopyViewModel(
         }
     }
 
+    /** Next/previous detected line; a band sitting between lines goes to the nearest one ahead. */
+    private fun moveByLine(current: Band, lines: List<LineSpan>, forward: Boolean): MoveResult {
+        val center = current.top + current.height / 2f
+        val nearest = LineDetector.nearest(lines, center)
+        val onLine = center in lines[nearest].top..lines[nearest].bottom
+        val target = when {
+            onLine -> nearest + if (forward) 1 else -1
+            forward -> lines.indexOfFirst { it.center > center }
+            else -> lines.indexOfLast { it.center < center }
+        }
+        if (target !in lines.indices) return MoveResult.AtEdge
+        snapTo(lines[target])
+        commitBand()
+        return MoveResult.BandMoved(lines[target].top)
+    }
+
+    private fun snapTo(line: LineSpan) {
+        val height = line.height.coerceIn(MIN_BAND, MAX_BAND)
+        band.value = Band(ImageBand.clampTop(line.top, height), height)
+    }
+
+    private fun readyLines(): List<LineSpan> = (image.value as? ImageLoad.Ready)?.lines.orEmpty()
+
+    /** Detected lines when snapping is on and enough were found, otherwise empty. */
+    private fun activeLines(): List<LineSpan> =
+        if (snapToLines.value) readyLines().takeIf { it.size >= MIN_LINES }.orEmpty() else emptyList()
+
     private fun setIndex(unit: SegmentUnit, index: Int) {
         cursor.value = Cursor(unit, index)
         repository.savePosition(documentId, index)
     }
 
     private suspend fun loadImage(relativePath: String?) {
-        val bitmap = try {
-            relativePath?.let { imageStore.loadBitmap(it) }
+        val loaded = try {
+            relativePath?.let { imageStore.loadBitmap(it) }?.let { it to imageStore.findLines(it) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
             null
         }
-        image.value = if (bitmap != null) ImageLoad.Ready(bitmap.asImageBitmap()) else ImageLoad.Failed
+        image.value = if (loaded != null) {
+            ImageLoad.Ready(loaded.first.asImageBitmap(), loaded.second)
+        } else {
+            ImageLoad.Failed
+        }
+        // Settle the band on a real line straight away, so the first "next" lands correctly.
+        val current = band.value ?: return
+        val lines = activeLines()
+        if (lines.isNotEmpty()) {
+            snapTo(lines[LineDetector.nearest(lines, current.top + current.height / 2f)])
+            commitBand()
+        }
     }
 
     private fun segmentsFor(text: String, unit: SegmentUnit): List<Segment> {
@@ -297,3 +382,8 @@ class CopyViewModel(
 
     private fun clampIndex(index: Int, size: Int): Int = index.coerceIn(0, (size - 1).coerceAtLeast(0))
 }
+
+/** Fewer detected lines than this is treated as "no lines found". */
+private const val MIN_LINES = 2
+private const val MIN_BAND = 0.005f
+private const val MAX_BAND = 0.5f

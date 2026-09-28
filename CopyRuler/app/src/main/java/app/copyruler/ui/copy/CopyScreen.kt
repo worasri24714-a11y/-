@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -46,6 +47,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -66,6 +68,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -230,10 +233,17 @@ fun CopyScreen(
                     }
                 }
                 is CopyUiState.Image -> {
-                    ProgressHeader(label = stringResource(R.string.copy_band_position), progress = s.progress)
+                    val label = if (s.snapping) {
+                        stringResource(R.string.copy_unit_line_short) + " " +
+                            stringResource(R.string.copy_counter, s.lineIndex + 1, s.lineCount)
+                    } else {
+                        stringResource(R.string.copy_band_position)
+                    }
+                    ProgressHeader(label = label, progress = s.progress)
                     AnimatedVisibility(visible = showAdjust) {
                         BandAdjustPanel(
-                            height = s.bandHeight,
+                            state = s,
+                            onSnapChange = viewModel::setSnapToLines,
                             onHeightChange = viewModel::setBandHeight,
                             onHeightChangeFinished = viewModel::commitBand,
                         )
@@ -250,7 +260,7 @@ fun CopyScreen(
                                 haptics.tick()
                             },
                             onBandDrag = viewModel::dragBandTo,
-                            onBandDragEnd = viewModel::commitBand,
+                            onBandDragEnd = viewModel::finishDrag,
                             description = stringResource(R.string.band_description, (s.progress * 100).roundToInt()),
                             modifier = Modifier.weight(1f),
                         )
@@ -369,33 +379,69 @@ private fun TextAdjustPanel(
 
 @Composable
 private fun BandAdjustPanel(
-    height: Float,
+    state: CopyUiState.Image,
+    onSnapChange: (Boolean) -> Unit,
     onHeightChange: (Float) -> Unit,
     onHeightChangeFinished: () -> Unit,
 ) {
+    val height = state.bandHeight
     AdjustPanel {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.toggleable(
+                value = state.snapToLines,
+                role = Role.Switch,
+                onValueChange = onSnapChange,
+            ),
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.snap_lines_label), style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = when {
+                        !state.snapToLines -> stringResource(R.string.snap_lines_off)
+                        state.bitmap == null -> ""
+                        state.snapping -> stringResource(R.string.snap_lines_found, state.lineCount)
+                        else -> stringResource(R.string.snap_lines_none)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(checked = state.snapToLines, onCheckedChange = null)
+        }
+        if (state.snapping) {
+            Spacer(Modifier.height(8.dp))
             Text(
-                stringResource(R.string.band_height_label),
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.weight(1f),
+                text = stringResource(R.string.band_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.band_height_label),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = stringResource(R.string.band_height_value, String.format(Locale.ROOT, "%.1f", height * 100)),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+            Slider(
+                value = height,
+                onValueChange = onHeightChange,
+                onValueChangeFinished = onHeightChangeFinished,
+                valueRange = ImageBand.MIN_HEIGHT..ImageBand.MAX_HEIGHT,
             )
             Text(
-                text = stringResource(R.string.band_height_value, String.format(Locale.ROOT, "%.1f", height * 100)),
-                style = MaterialTheme.typography.labelLarge,
+                text = stringResource(R.string.band_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Slider(
-            value = height,
-            onValueChange = onHeightChange,
-            onValueChangeFinished = onHeightChangeFinished,
-            valueRange = ImageBand.MIN_HEIGHT..ImageBand.MAX_HEIGHT,
-        )
-        Text(
-            text = stringResource(R.string.band_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
