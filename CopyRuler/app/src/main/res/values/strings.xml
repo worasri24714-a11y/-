@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ไม้บรรทัดลอกงาน</string>
+
+    <!-- Common -->
+    <string name="action_back">ย้อนกลับ</string>
+    <string name="action_cancel">ยกเลิก</string>
+    <string name="action_save">บันทึก</string>
+    <string name="action_delete">ลบ</string>
+    <string name="action_ok">ตกลง</string>
+    <string name="action_close">ปิด</string>
+
+    <!-- Document list -->
+    <string name="action_settings">ตั้งค่า</string>
+    <string name="action_create">สร้างใหม่</string>
+    <string name="action_more">ตัวเลือกเพิ่มเติม</string>
+    <string name="action_rename">เปลี่ยนชื่อ</string>
+    <string name="action_edit_text">แก้ไขข้อความ</string>
+    <string name="list_empty_title">ยังไม่มีเอกสาร</string>
+    <string name="list_empty_body">กด “สร้างใหม่” เพื่อวางข้อความ ถ่ายรูป หรือเลือกรูปต้นฉบับที่จะลอก</string>
+    <string name="doc_text_summary">ข้อความ · %1$d ท่อน</string>
+    <string name="doc_image_summary">รูปภาพ</string>
+    <string name="doc_last_opened">เปิดล่าสุด %1$s</string>
+    <string name="percent">%1$d%%</string>
+    <string name="create_sheet_title">สร้างเอกสารใหม่</string>
+    <string name="create_text">พิมพ์หรือวางข้อความ</string>
+    <string name="create_text_desc">ไล่ลอกข้อความทีละบรรทัดหรือทีละวลี</string>
+    <string name="create_camera">ถ่ายรูปต้นฉบับ</string>
+    <string name="create_camera_desc">ถ่ายหน้ากระดาษ แล้วใช้แถบไฮไลต์ไล่ทีละบรรทัด</string>
+    <string name="create_gallery">เลือกรูปจากคลังภาพ</string>
+    <string name="create_gallery_desc">ใช้รูปต้นฉบับที่มีอยู่แล้วในเครื่อง</string>
+    <string name="rename_title">เปลี่ยนชื่อเอกสาร</string>
+    <string name="field_document_name">ชื่อเอกสาร</string>
+    <string name="delete_title">ลบเอกสารนี้?</string>
+    <string name="delete_body">“%1$s” จะถูกลบถาวร รวมถึงตำแหน่งที่ลอกค้างไว้</string>
+    <string name="camera_permission_title">ต้องใช้สิทธิ์กล้อง</string>
+    <string name="camera_permission_body">อนุญาตให้แอปใช้กล้องเพื่อถ่ายรูปต้นฉบับ หรือจะเลือกรูปจากคลังภาพแทนก็ได้ โดยไม่ต้องให้สิทธิ์</string>
+    <string name="action_open_settings">เปิดการตั้งค่า</string>
+    <string name="error_no_camera_app">ไม่พบแอปกล้องในเครื่องนี้</string>
+    <string name="error_import_image">เปิดรูปนี้ไม่ได้ ลองเลือกรูปอื่น</string>
+    <string name="importing_image">กำลังเตรียมรูป…</string>
+    <string name="image_doc_title">รูปต้นฉบับ %1$s</string>
+
+    <!-- Text editor -->
+    <string name="editor_new_title">เอกสารใหม่</string>
+    <string name="editor_edit_title">แก้ไขข้อความ</string>
+    <string name="editor_name_label">ชื่อเอกสาร (ไม่ใส่ก็ได้)</string>
+    <string name="editor_text_placeholder">วางหรือพิมพ์ข้อความต้นฉบับที่นี่…</string>
+    <string name="editor_paste">วางจากคลิปบอร์ด</string>
+    <string name="editor_clear">ล้างข้อความ</string>
+    <string name="editor_clipboard_empty">คลิปบอร์ดไม่มีข้อความ</string>
+    <string name="editor_counts">%1$d บรรทัด · %2$d วลี</string>
+    <string name="editor_start">เริ่มลอก</string>
+    <string name="editor_save_continue">บันทึกแล้วลอกต่อ</string>
+    <string name="editor_discard_title">ทิ้งการแก้ไข?</string>
+    <string name="editor_discard_body">ข้อความที่แก้ไขไว้จะไม่ถูกบันทึก</string>
+    <string name="action_discard">ทิ้ง</string>
+    <string name="action_keep_editing">แก้ไขต่อ</string>
+    <string name="editor_untitled">เอกสารไม่มีชื่อ</string>
+
+    <!-- Copy screen -->
+    <string name="copy_counter">%1$d / %2$d</string>
+    <string name="copy_unit_line_short">บรรทัด</string>
+    <string name="copy_unit_phrase_short">วลี</string>
+    <string name="copy_band_position">ตำแหน่งแถบ</string>
+    <string name="action_previous">↑ ย้อน</string>
+    <string name="action_next">ลอกเสร็จ ถัดไป ↓</string>
+    <string name="copy_volume_hint">ปุ่มเสียง: ลด = ถัดไป · เพิ่ม = ย้อน</string>
+    <string name="action_adjust">ปรับการแสดงผล</string>
+    <string name="unit_label">เลื่อนทีละ</string>
+    <string name="unit_line">ทีละบรรทัด</string>
+    <string name="unit_phrase">ทีละวลี</string>
+    <string name="font_size_label">ขนาดตัวอักษร</string>
+    <string name="font_size_value">%1$d sp</string>
+    <string name="band_height_label">ความสูงแถบ</string>
+    <string name="band_height_value">%1$s%% ของความสูงรูป</string>
+    <string name="band_hint">แตะที่รูปเพื่อย้ายแถบ ลากแถบได้โดยตรง และถ่างสองนิ้วเพื่อซูม</string>
+    <string name="copy_end_text">ลอกครบทุกท่อนแล้ว 🎉</string>
+    <string name="copy_start_text">อยู่ท่อนแรกแล้ว</string>
+    <string name="copy_end_image">แถบอยู่ท้ายรูปแล้ว 🎉</string>
+    <string name="copy_start_image">แถบอยู่บนสุดของรูปแล้ว</string>
+    <string name="copy_empty_text">เอกสารนี้ยังไม่มีข้อความ กดปุ่มแก้ไขด้านบนเพื่อเพิ่มข้อความ</string>
+    <string name="copy_image_failed">เปิดรูปไม่ได้ ไฟล์รูปอาจเสียหาย</string>
+    <string name="copy_missing">ไม่พบเอกสารนี้แล้ว</string>
+    <string name="segment_state_done">ลอกแล้ว</string>
+    <string name="segment_state_current">กำลังลอก</string>
+    <string name="segment_number">ท่อนที่ %1$d</string>
+    <string name="band_description">รูปต้นฉบับพร้อมแถบไฮไลต์ ตำแหน่ง %1$d%%</string>
+
+    <!-- Text recognition -->
+    <string name="action_ocr">แปลงรูปเป็นข้อความ</string>
+    <string name="ocr_running">กำลังอ่านข้อความจากรูป…</string>
+    <string name="ocr_result_title">ข้อความที่อ่านได้</string>
+    <string name="ocr_limit_note">ตัวอ่านข้อความในเครื่อง (ML Kit) อ่านได้เฉพาะอักษรละติน เช่น ภาษาอังกฤษและตัวเลข ยังอ่านภาษาไทยไม่ได้ ตัวอักษรไทยจะหายไปหรือเพี้ยน ควรตรวจทานก่อนลอก</string>
+    <string name="ocr_send_to_text">ส่งไปโหมดข้อความ</string>
+    <string name="ocr_nothing_title">อ่านข้อความไม่ได้</string>
+    <string name="ocr_nothing_body">ไม่พบข้อความที่อ่านได้ในรูปนี้</string>
+    <string name="ocr_failed_title">แปลงรูปเป็นข้อความไม่สำเร็จ</string>
+    <string name="ocr_failed_body">ตัวอ่านข้อความในเครื่องใช้งานไม่ได้ในขณะนี้ ยังใช้แถบไฮไลต์บนรูปได้ตามปกติ</string>
+    <string name="ocr_doc_title">%1$s (ข้อความจากรูป)</string>
+
+    <!-- Settings -->
+    <string name="settings_title">ตั้งค่า</string>
+    <string name="settings_section_controls">การควบคุม</string>
+    <string name="settings_volume_keys">ใช้ปุ่มปรับเสียงเลื่อนท่อน</string>
+    <string name="settings_volume_keys_desc">ลดเสียง = ถัดไป · เพิ่มเสียง = ย้อนกลับ ทำงานเฉพาะหน้าลอกงาน</string>
+    <string name="settings_haptics">สั่นเมื่อเลื่อนท่อน</string>
+    <string name="settings_haptics_desc">สั่นเบาๆ ทุกครั้งที่แถบไฮไลต์เลื่อน</string>
+    <string name="settings_section_display">การแสดงผล</string>
+    <string name="settings_font_size">ขนาดตัวอักษรในโหมดข้อความ</string>
+    <string name="settings_font_preview">พันธะเคมีคือแรงยึดเหนี่ยวระหว่างอะตอม</string>
+    <string name="settings_theme">ธีม</string>
+    <string name="theme_system">ตามระบบ</string>
+    <string name="theme_light">สว่าง</string>
+    <string name="theme_dark">มืด</string>
+    <string name="settings_section_about">เกี่ยวกับ</string>
+    <string name="settings_version">เวอร์ชัน %1$s</string>
+    <string name="settings_offline">ทำงานแบบออฟไลน์ทั้งหมด ไม่ต้องใช้อินเทอร์เน็ต</string>
+    <string name="settings_screen_on">หน้าจอจะเปิดค้างไว้ตลอดเวลาที่อยู่หน้าลอกงาน</string>
+    <string name="settings_font_credit">ฟอนต์ IBM Plex Sans Thai · SIL Open Font License 1.1</string>
+</resources>

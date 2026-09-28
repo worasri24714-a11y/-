@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Temporary photos from the camera app, copied to internal storage right after capture. -->
+    <cache-path
+        name="camera"
+        path="camera/" />
+</paths>
