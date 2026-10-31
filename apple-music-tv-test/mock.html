@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Mock music.apple.com</title>
+<style>
+  body { margin: 0; font: 15px system-ui; background: #1c1c1e; color: #eee; }
+  nav[data-testid="navigation"] { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; padding: 20px; }
+  nav a { display: block; color: inherit; text-decoration: none; padding: 6px 10px; }
+  main { margin-left: 280px; padding: 30px; }
+  .grid { display: grid; grid-template-columns: repeat(5, 180px); gap: 20px; }
+  .product-lockup canvas { width: 180px; height: 180px; display:block }
+  input { padding: 8px; width: 300px; }
+</style>
+<script>
+// ---- fake MusicKit ----
+(function () {
+  function makeArt(c1, c2, label) {
+    const c = document.createElement('canvas'); c.width = c.height = 600;
+    const g = c.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 600, 600); gr.addColorStop(0, c1); gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.fillRect(0, 0, 600, 600);
+    g.fillStyle = 'rgba(255,255,255,.18)';
+    for (let i = 0; i < 6; i++) { g.beginPath(); g.arc(80 + i * 90, 300 + Math.sin(i) * 160, 40 + i * 18, 0, 7); g.fill(); }
+    g.fillStyle = '#fff'; g.font = 'bold 64px sans-serif'; g.fillText(label, 40, 540);
+    return c.toDataURL('image/jpeg', .9);
+  }
+  const TRACKS = [
+    { name: 'ฝนตกไหม (Rain Tonight)', artistName: 'วงสายลม feat. Nova', albumName: 'แสงสุดท้าย - Single', durationInMillis: 214000, c: ['#ff5f6d', '#3a1c71'], label: 'SAILOM' },
+    { name: 'Midnight Highway', artistName: 'The Northern Lights', albumName: 'Afterglow', durationInMillis: 187000, c: ['#1fa2ff', '#0b3d2e'], label: 'AFTERGLOW' },
+  ];
+  const params = new URLSearchParams(location.search);
+  let idx = 0, playing = params.get('empty') ? false : true, base = parseFloat(params.get('t') || '0'), at = performance.now();
+  let empty = !!params.get('empty');
+  const arts = {};
+  const now = () => playing ? base + (performance.now() - at) / 1000 : base;
+  const inst = {
+    get nowPlayingItem() {
+      if (empty) return null;
+      const t = TRACKS[idx];
+      if (!arts[idx]) arts[idx] = makeArt(t.c[0], t.c[1], t.label);
+      return { id: 'm' + idx, attributes: { name: t.name, artistName: t.artistName, albumName: t.albumName, durationInMillis: t.durationInMillis, artwork: { url: arts[idx] } } };
+    },
+    get currentPlaybackTime() { return Math.floor(now()); },  // ให้เป็นวินาทีเต็ม เหมือน MusicKit บางเวอร์ชัน
+    get currentPlaybackDuration() { return empty ? 0 : TRACKS[idx].durationInMillis / 1000; },
+    get isPlaying() { return playing && !empty; },
+    get playbackState() { return playing ? 2 : 3; },
+    play() { base = now(); playing = true; at = performance.now(); return Promise.resolve(); },
+    pause() { base = now(); playing = false; return Promise.resolve(); },
+    skipToNextItem() { idx = (idx + 1) % TRACKS.length; base = 0; at = performance.now(); return Promise.resolve(); },
+    skipToPreviousItem() { idx = (idx + TRACKS.length - 1) % TRACKS.length; base = 0; at = performance.now(); return Promise.resolve(); },
+    seekToTime(t) { base = t; at = performance.now(); return Promise.resolve(); },
+  };
+  window.MusicKit = { getInstance: () => inst };
+  window.__mock = { inst, setEmpty(v) { empty = v; } };
+})();
+</script>
+</head>
+<body>
+<nav data-testid="navigation" aria-label="Main">
+  <a href="#" aria-current="page">หน้าหลัก</a><a href="#">ใหม่</a><a href="#">วิทยุ</a><a href="#">คลังเพลง</a>
+</nav>
+<main>
+  <h1>เพลงแนะนำสำหรับคุณ</h1>
+  <p><input id="search" type="search" placeholder="ค้นหา"></p>
+  <div class="grid">
+    <div class="product-lockup" data-testid="product-lockup"><div data-testid="artwork-component"><canvas></canvas></div><div class="product-lockup__title">แสงสุดท้าย</div></div>
+  </div>
+</main>
+</body>
+</html>

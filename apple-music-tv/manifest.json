@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Apple Music TV Mode",
+  "short_name": "AM TV Mode",
+  "version": "1.0.0",
+  "description": "โหมด Now Playing เต็มจอแบบ Apple TV พร้อมเนื้อเพลงซิงก์ สำหรับ music.apple.com บนทีวีจอใหญ่",
+  "minimum_chrome_version": "111",
+  "permissions": ["storage"],
+  "host_permissions": ["https://lrclib.net/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://music.apple.com/*", "https://beta.music.apple.com/*"],
+      "js": ["page.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://music.apple.com/*", "https://beta.music.apple.com/*"],
+      "js": ["bridge.js"],
+      "css": ["skin.css"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["fonts/*"],
+      "matches": ["https://music.apple.com/*", "https://beta.music.apple.com/*"]
+    }
+  ]
+}

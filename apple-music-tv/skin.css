@@ -1,0 +1,143 @@
+/* Apple Music TV Mode — สกินหน้าเว็บปกติ
+ * ทุกกฎผูกกับ html[data-amtv-skin] ซึ่ง page.js ใส่ให้หลังโหลดสำเร็จเท่านั้น
+ * ถ้า script พังหรือ selector ไม่เจอ หน้าเว็บจะกลับเป็นแบบเดิม (ไม่พัง)
+ * ใช้ attribute selector / data-testid / aria-label / ชื่อ class ที่ไม่ใช่ hash ของ Svelte
+ */
+
+html[data-amtv-skin] {
+  --amtv-font: "AMTV Sans", -apple-system, "SF Pro Display", "Segoe UI Variable Display", "Leelawadee UI", sans-serif;
+  --amtv-accent: #fa2d48;
+  --amtv-bg: #0d0d10;
+  --amtv-bg-2: #16161b;
+  --amtv-text: #f5f5f7;
+  --amtv-text-2: rgba(245, 245, 247, .64);
+  color-scheme: dark;
+
+  /* ตัวแปรสีของเว็บ Apple (ถ้าชื่อเปลี่ยนก็ไม่มีผลเสีย) */
+  --pageBG: var(--amtv-bg);
+  --systemPrimary: var(--amtv-text);
+  --systemSecondary: var(--amtv-text-2);
+  --systemTertiary: rgba(245, 245, 247, .45);
+  --systemQuaternary: rgba(245, 245, 247, .25);
+  --labelPrimary: var(--amtv-text);
+  --labelSecondary: var(--amtv-text-2);
+  --navSidebarBG: #121216;
+  --sidebarBG: #121216;
+  --systemBackground: var(--amtv-bg);
+  --keyColor: var(--amtv-accent);
+  --keyColorBG: rgba(250, 45, 72, .18);
+}
+
+html[data-amtv-skin],
+html[data-amtv-skin] body {
+  background-color: var(--amtv-bg);
+  color: var(--amtv-text);
+}
+
+/* ---------- ฟอนต์ทั้งหน้า ---------- */
+html[data-amtv-skin] body,
+html[data-amtv-skin] body :where(h1, h2, h3, h4, h5, h6, p, a, span, li, div, button, label, input, textarea, select, time, figcaption, dd, dt) {
+  font-family: var(--amtv-font) !important;
+  -webkit-font-smoothing: antialiased;
+}
+html[data-amtv-skin] body { text-rendering: optimizeLegibility; }
+
+/* ภาษาไทยต้องการ line-height อย่างน้อย 1.3 (สระบน/วรรณยุกต์ไม่ชน) */
+html[data-amtv-skin] body :where(h1, h2, h3, h4, p, [data-testid*="title" i], [data-testid*="subtitle" i], [class*="lockup__title"], [class*="lockup__subtitle"], [class*="headings__"]) {
+  line-height: 1.35;
+}
+
+/* หัวข้อ: ใหญ่ หนา letter-spacing ติดลบเล็กน้อย */
+html[data-amtv-skin] body :where(h1, [class*="headings__title"], [data-testid="header-title"], [data-testid*="page-header" i] h1) {
+  letter-spacing: -.022em;
+  font-weight: 750;
+}
+html[data-amtv-skin] body :where(h2, [class*="section-header"] h2, [data-testid*="section-title" i], [class*="title__title"]) {
+  font-size: max(1em, 22px);
+  letter-spacing: -.015em;
+  font-weight: 700;
+}
+
+/* ---------- sidebar ---------- */
+html[data-amtv-skin] :where(nav[data-testid*="navigation" i], [data-testid="navigation"], [class*="navigation__"], nav[aria-label]) {
+  background-color: #121216;
+}
+html[data-amtv-skin] :where(nav[data-testid*="navigation" i], [data-testid="navigation"], [class*="navigation__"]) :where(a, button, [role="link"], [role="button"], li) {
+  font-size: max(1em, 15px);
+  font-weight: 560;
+  border-radius: 10px;
+}
+html[data-amtv-skin] :where(nav[data-testid*="navigation" i], [data-testid="navigation"]) :where(a, [role="link"]) {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+html[data-amtv-skin] :where(nav[data-testid*="navigation" i], [data-testid="navigation"]) :where(a[aria-current="page"], [aria-selected="true"], [class*="--selected"], [class*="is-active"]) {
+  background-color: rgba(255, 255, 255, .12);
+  color: #fff;
+}
+
+/* ---------- ปกอัลบั้ม / การ์ด ---------- */
+html[data-amtv-skin] :where([data-testid="artwork-component"], [class*="artwork-component"], picture) {
+  border-radius: 10px;
+}
+html[data-amtv-skin] :where([data-testid*="lockup" i], [class*="product-lockup"], [class*="lockup"]) :where([data-testid="artwork-component"], [class*="artwork-component"], picture) {
+  transition: transform .25s cubic-bezier(.22, .8, .2, 1), box-shadow .25s ease;
+}
+html[data-amtv-skin] :where([data-testid*="lockup" i], [class*="product-lockup"]):is(:hover, :focus-within) :where([data-testid="artwork-component"], [class*="artwork-component"]) {
+  transform: scale(1.04);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .5);
+}
+html[data-amtv-skin] :where([data-testid*="lockup" i], [class*="product-lockup"]) :where([class*="lockup__title"], [data-testid*="lockup-title" i]) {
+  font-size: max(1em, 15px);
+  font-weight: 620;
+}
+html[data-amtv-skin] :where([data-testid*="lockup" i], [class*="product-lockup"]) :where([class*="lockup__subtitle"], [data-testid*="lockup-subtitle" i]) {
+  font-size: max(1em, 14px);
+  color: var(--amtv-text-2);
+}
+
+/* รายการเพลง */
+html[data-amtv-skin] :where([data-testid="track-list-item"], [class*="songs-list-row"], [role="row"]) {
+  border-radius: 10px;
+}
+html[data-amtv-skin] :where([data-testid="track-list-item"], [class*="songs-list-row"]):is(:hover, :focus-within) {
+  background-color: rgba(255, 255, 255, .07);
+}
+html[data-amtv-skin] :where([data-testid="track-title"], [class*="songs-list-row__song-name"]) {
+  font-size: max(1em, 15px);
+  font-weight: 600;
+}
+
+/* ช่องค้นหา */
+html[data-amtv-skin] :where(input[type="search"], [data-testid*="search-input" i] input) {
+  font-size: max(1em, 16px);
+  border-radius: 10px;
+}
+
+/* ---------- focus ring ชัด ใช้คีย์บอร์ด/รีโมตได้ ---------- */
+html[data-amtv-skin] :focus-visible {
+  outline: 3px solid var(--amtv-accent) !important;
+  outline-offset: 3px !important;
+  border-radius: 8px;
+  box-shadow: 0 0 0 6px rgba(250, 45, 72, .25) !important;
+}
+html[data-amtv-skin] :where(a, button, [role="button"], [role="link"], [tabindex]):focus-visible {
+  position: relative;
+  z-index: 2;
+}
+
+/* scrollbar มืด */
+html[data-amtv-skin] * {
+  scrollbar-color: rgba(255, 255, 255, .22) transparent;
+}
+
+/* ---------- ขยายหน้า (สำรอง กรณี chrome.tabs.setZoom ใช้ไม่ได้) ---------- */
+html[data-amtv-zoom="115"] body { zoom: 1.15; }
+html[data-amtv-zoom="130"] body { zoom: 1.3; }
+html[data-amtv-zoom="150"] body { zoom: 1.5; }
+
+/* ตอนเปิดโหมดทีวี ไม่ให้หน้าเว็บด้านหลัง scroll */
+html[data-amtv-open],
+html[data-amtv-open] body {
+  overflow: hidden !important;
+}
